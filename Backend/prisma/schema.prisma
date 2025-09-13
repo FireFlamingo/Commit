@@ -1,0 +1,73 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+}
+
+model User {
+  id                 String   @id @default(cuid())
+  email             String   @unique
+  webauthnUserId    String   @unique @map("webauthn_user_id")
+  keyDerivationSalt String   @map("key_derivation_salt")
+  vaultVersion      Int      @default(1) @map("vault_version")
+  lastSyncAt        DateTime? @map("last_sync_at")
+  isActive          Boolean  @default(true) @map("is_active")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  credentials WebAuthnCredential[]
+  vaultItems  VaultItem[]
+
+  @@map("users")
+}
+
+model WebAuthnCredential {
+  id           String    @id @default(cuid())
+  userId       String    @map("user_id")
+  credentialId String    @unique @map("credential_id")
+  publicKey    String    @map("public_key")
+  counter      BigInt    @default(0)
+  deviceName   String?   @map("device_name")
+  aaguid       String?
+  lastUsedAt   DateTime? @map("last_used_at")
+  isActive     Boolean   @default(true) @map("is_active")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("webauthn_credentials")
+}
+
+model VaultItem {
+  id                String    @id @default(cuid())
+  userId            String    @map("user_id")
+  encryptedData     String    @map("encrypted_data")
+  iv                String
+  authTag           String    @map("auth_tag")
+  itemType          ItemType  @map("item_type")
+  version           Int       @default(1)
+  encryptedMetadata String?   @map("encrypted_metadata")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("vault_items")
+}
+
+enum ItemType {
+  credential
+  note
+  totp
+  attachment
+}
