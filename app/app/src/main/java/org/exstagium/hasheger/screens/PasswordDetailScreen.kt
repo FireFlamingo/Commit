@@ -54,12 +54,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import org.exstagium.hasheger.navigation.Screen
+import org.exstagium.hasheger.utils.PasswordVault
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PasswordDetailScreen(navController: NavController, id: String) {
     val item = remember {
-        VaultItem(
+        PasswordVault.getVaultItemSingle(null, navController.context, id) ?: VaultItem(
             id = id,
             service = "GitHub",
             username = "dev_user@example.com",
@@ -209,7 +210,8 @@ fun PasswordDetailScreen(navController: NavController, id: String) {
                         trailingIcon = {
                             IconButton(onClick = {
                                 clipboardManager.setText(AnnotatedString(item.username))
-                                Toast.makeText(context, "Username copied", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "Username copied", Toast.LENGTH_SHORT)
+                                    .show()
                             }) {
                                 Icon(
                                     Icons.Default.ContentCopy,
@@ -263,7 +265,8 @@ fun PasswordDetailScreen(navController: NavController, id: String) {
                                 }
                                 IconButton(onClick = {
                                     clipboardManager.setText(AnnotatedString(item.password))
-                                    Toast.makeText(context, "Password copied", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "Password copied", Toast.LENGTH_SHORT)
+                                        .show()
                                 }) {
                                     Icon(
                                         Icons.Default.ContentCopy,
@@ -364,7 +367,9 @@ fun PasswordDetailScreen(navController: NavController, id: String) {
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
-                        text = "Password Strength: ${item.strength.name.lowercase().replaceFirstChar { it.uppercase() }}",
+                        text = "Password Strength: ${
+                            item.strength.name.lowercase().replaceFirstChar { it.uppercase() }
+                        }",
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Medium,
                         color = when (item.strength) {

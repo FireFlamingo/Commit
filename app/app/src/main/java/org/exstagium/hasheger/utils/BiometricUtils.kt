@@ -7,7 +7,7 @@ import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 
-class BiometricUtils(private val activity: FragmentActivity) {
+open class BiometricUtils(private val activity: FragmentActivity) {
 
     fun canAuthenticate(): Boolean {
         val biometricManager = BiometricManager.from(activity)

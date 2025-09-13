@@ -10,6 +10,7 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import org.exstagium.hasheger.screens.PasswordDetailScreen
 import java.io.IOException
 import java.security.SecureRandom
 import javax.crypto.Cipher
@@ -221,6 +222,8 @@ object AuthUtil {
                 if (response.isSuccessful) {
                     val registerResponse = json.decodeFromString<RegisterResponse>(responseBody)
                     saveAuthData(context, registerResponse.token, registerResponse.userId, email)
+                    PasswordVault.saveSalt(context, salt)
+                    PasswordVault.createVaultCheck(password, context)
                     Result.success(registerResponse)
                 } else {
                     val error = try {
@@ -317,6 +320,8 @@ object AuthUtil {
                         loginResponse.userId,
                         loginResponse.email
                     )
+                    PasswordVault.saveSalt(context, saltBytes)
+                    PasswordVault.createVaultCheck(password, context)
                     Result.success(loginResponse)
                 } else {
                     val error = try {
