@@ -124,7 +124,7 @@ export function DetailView({ item, onEdit, onDelete }: DetailViewProps) {
         {item.totpSecret && (
           <Card className="bg-[#1E1E1E] border-[#2A2A2A] mb-6">
             <CardHeader>
-              <CardTitle className="text-[#F5F5F5] text-lg"></CardTitle>
+              <CardTitle className="text-[#F5F5F5] text-lg">Two-Factor Authentication</CardTitle>
             </CardHeader>
             <CardContent>
               <TotpDisplay secret={item.totpSecret} />

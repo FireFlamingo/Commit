@@ -1,11 +1,10 @@
 "use client"
 
-import { Folder, Tag, Settings, Plus, Download, Upload } from "lucide-react"
+import { Folder, Tag, Settings, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
 import { useVault } from "@/app/contexts/vault-context"
-import { useToast } from "@/hooks/use-toast"
 
 interface SidebarProps {
   selectedFolder: string
@@ -13,8 +12,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ selectedFolder, onFolderSelect }: SidebarProps) {
-  const { folders, tags, addFolder, addTag, saveVaultToFile, loadVaultFromFile, isUnlocked } = useVault()
-  const { toast } = useToast()
+  const { folders, tags, addFolder, addTag } = useVault()
 
   const handleAddFolder = () => {
     const name = window.prompt("Enter folder name:")
@@ -30,56 +28,6 @@ export function Sidebar({ selectedFolder, onFolderSelect }: SidebarProps) {
     }
   }
 
-  const handleSaveVault = async () => {
-    if (!isUnlocked) {
-      toast({
-        title: "Vault Locked",
-        description: "Please unlock your vault first.",
-        variant: "destructive"
-      })
-      return
-    }
-
-    try {
-      await saveVaultToFile()
-      toast({
-        title: "Vault Saved",
-        description: "Your vault has been encrypted and saved to file."
-      })
-    } catch (error) {
-      toast({
-        title: "Save Failed",
-        description: error instanceof Error ? error.message : "Failed to save vault",
-        variant: "destructive"
-      })
-    }
-  }
-
-  const handleLoadVault = async () => {
-    if (!isUnlocked) {
-      toast({
-        title: "Vault Locked",
-        description: "Please unlock your vault first.",
-        variant: "destructive"
-      })
-      return
-    }
-
-    try {
-      await loadVaultFromFile()
-      toast({
-        title: "Vault Loaded",
-        description: "Your vault has been loaded from the encrypted file."
-      })
-    } catch (error) {
-      toast({
-        title: "Load Failed",
-        description: error instanceof Error ? error.message : "Failed to load vault",
-        variant: "destructive"
-      })
-    }
-  }
-
   return (
     <div className="w-64 bg-[#1E1E1E] border-r border-[#2A2A2A] flex flex-col">
       {/* Header */}
@@ -88,7 +36,7 @@ export function Sidebar({ selectedFolder, onFolderSelect }: SidebarProps) {
           <div className="p-1 bg-[#4C2F7C] rounded">
             <Folder className="w-4 h-4 text-[#F5F5F5]" />
           </div>
-          Hasheger
+          SecureVault
         </h2>
       </div>
 
@@ -149,30 +97,6 @@ export function Sidebar({ selectedFolder, onFolderSelect }: SidebarProps) {
               </button>
             ))}
           </div>
-        </div>
-      </div>
-
-      {/* File Operations */}
-      <div className="p-4 border-t border-[#2A2A2A]">
-        <div className="space-y-2">
-          <Button
-            variant="ghost"
-            onClick={handleSaveVault}
-            disabled={!isUnlocked}
-            className="w-full justify-start text-[#F5F5F5] hover:bg-[#333333] hover:text-[#9D85C5] disabled:opacity-50"
-          >
-            <Download className="w-4 h-4 mr-2" />
-            Save Vault
-          </Button>
-          <Button
-            variant="ghost"
-            onClick={handleLoadVault}
-            disabled={!isUnlocked}
-            className="w-full justify-start text-[#F5F5F5] hover:bg-[#333333] hover:text-[#9D85C5] disabled:opacity-50"
-          >
-            <Upload className="w-4 h-4 mr-2" />
-            Load Vault
-          </Button>
         </div>
       </div>
 
