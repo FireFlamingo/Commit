@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div id="app">
+        <!-- NOT LOGGED IN to EXSTAGIUM -->
+        <div id="exstagium-login-state" class="state active">
+            <div class="header">
+                <h1>🔓 Login to EXSTAGIUM</h1>
+                <p>Connect to your password vault</p>
+            </div>
+            
+            <div class="form-group">
+                <input type="email" id="exstagium-email" placeholder="Your EXSTAGIUM email" />
+                <button id="exstagium-login-btn">Login</button>
+            </div>
+            
+            <div class="status" id="exstagium-login-status"></div>
+        </div>
+
+        <!-- LOGGED IN but VAULT LOCKED -->
+        <div id="vault-locked-state" class="state">
+            <div class="header">
+                <h1>🔐 EXSTAGIUM</h1>
+                <p>Enter master password to unlock vault</p>
+            </div>
+            
+            <div class="form-group">
+                <input type="password" id="master-password" placeholder="Master password" />
+                <button id="unlock-vault-btn">Unlock Vault</button>
+            </div>
+            
+            <div class="status" id="unlock-status"></div>
+            
+            <div class="user-info" id="logged-user">
+                Logged in as: loading...
+            </div>
+        </div>
+
+        <!-- VAULT UNLOCKED - Main Extension Features -->
+        <div id="vault-unlocked-state" class="state">
+            <div class="header">
+                <h1>✅ EXSTAGIUM</h1>
+                <button id="lock-vault-btn" class="small-btn">Lock</button>
+            </div>
+            
+            <div class="current-site" id="current-site">
+                Detecting current website...
+            </div>
+            
+            <div class="website-actions">
+                <!-- For NEW websites (no saved credentials) -->
+                <div id="new-website-section" class="action-section" style="display: none;">
+                    <h3>🆕 New Website Detected</h3>
+                    <button id="suggest-password-btn" class="action-btn">
+                        🎲 Suggest Strong Password
+                    </button>
+                </div>
+                
+                <!-- For EXISTING websites (has saved credentials) -->
+                <div id="existing-website-section" class="action-section" style="display: none;">
+                    <h3>🔑 Saved Credentials Found</h3>
+                    <button id="autofill-login-btn" class="action-btn">
+                        ⚡ Auto-fill Login
+                    </button>
+                    <div class="credential-preview" id="credential-preview">
+                        Username: loading...
+                    </div>
+                </div>
+                
+                <!-- General actions -->
+                <button id="view-all-passwords-btn" class="action-btn secondary">
+                    👁️ View All Passwords
+                </button>
+            </div>
+            
+            <div class="page-info" id="page-info">
+                Analyzing current website...
+            </div>
+            
+            <div class="status" id="main-status"></div>
+        </div>
+    </div>
+    
+    <script src="popup.js"></script>
+</body>
+</html>
