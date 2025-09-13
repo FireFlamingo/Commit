@@ -3,6 +3,7 @@ package org.exstagium.hasheger
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
@@ -84,10 +85,15 @@ fun AppNavHost(navController: NavHostController, biometricUtils: BiometricUtils)
             BiometricAuthScreen(
                 biometricUtils = biometricUtils,
                 onAuthenticated = {
+                    Toast.makeText(navController.context, "Authenticated", Toast.LENGTH_LONG).show()
+                    navController.navigate(Screen.Dashboard.route) {
+                        popUpTo(Screen.BiometricScreen.route) { inclusive = true }
+                    }
                     println("Yeah! We are authenticated")
                 },
                 onFailed = {
-                    println("0ops! We are NOT authenticated")
+                    Toast.makeText(navController.context, "Authetication failed", Toast.LENGTH_LONG).show()
+                    navController.popBackStack()
                 }
             )
         }
@@ -118,7 +124,7 @@ fun AppNavHost(navController: NavHostController, biometricUtils: BiometricUtils)
             RegisterScreen(
                 uiState = AuthUiState(),
                 onRegisterSuccess = { ->
-                    navController.navigate(Screen.Dashboard.route) {
+                    navController.navigate(Screen.MasterKeyInfoScreen.route) {
                         popUpTo(Screen.Register.route) { inclusive = true }
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }
@@ -214,7 +220,9 @@ fun AppNavHost(navController: NavHostController, biometricUtils: BiometricUtils)
                     navController.popBackStack()
                 },
                 onSuccess = {
-                    navController.popBackStack()
+                    navController.navigate(Screen.Dashboard.route) {
+                        popUpTo(Screen.MasterKeyValidation.route) { inclusive = true }
+                    }
                 }
             )
         }

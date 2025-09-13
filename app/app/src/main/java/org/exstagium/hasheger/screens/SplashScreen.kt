@@ -44,7 +44,7 @@ fun SplashScreen(navController: NavController, currentUser: User?) {
             animationSpec = tween(durationMillis = 800)
         )
         delay(1300)
-        navController.navigate(if (AuthUtil.isLoggedIn(context)) Screen.Dashboard.route else Screen.Login.route) {
+        navController.navigate(if (AuthUtil.isLoggedIn(context)) Screen.MasterKeyValidation.route else Screen.Login.route) {
             popUpTo(Screen.Splash.route) { inclusive = true }
         }
     }

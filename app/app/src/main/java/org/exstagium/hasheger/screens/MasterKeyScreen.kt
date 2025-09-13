@@ -37,6 +37,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,6 +50,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 import org.exstagium.hasheger.ui.theme.HashegerTheme
 import org.exstagium.hasheger.utils.PasswordVault
 import org.exstagium.hasheger.utils.VaultResult
@@ -418,27 +420,32 @@ fun CheckMasterKeyScreen(
     onBack: () -> Unit,
     onSuccess: () -> Unit
 ) {
-
     var masterKey by remember { mutableStateOf("") }
     var isChecking by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var masterKeyToCheck by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         onClearError()
     }
-    masterKeyToCheck?.let { key ->
-        LaunchedEffect(key) {
+
+    fun handlePasswordCheck() {
+        focusManager.clearFocus()
+        isChecking = true
+        errorMessage = null
+        scope.launch {
             try {
-                when (val result = PasswordVault.validateMasterPassword(key, context)) {
+                when (val result = PasswordVault.validateMasterPassword(masterKey, context)) {
                     is VaultResult.Success -> {
                         if (result.data) {
                             onSuccess()
                         } else {
                             errorMessage = "Master key is incorrect"
                         }
+                        isChecking = false
                     }
 
                     is VaultResult.Error -> {
@@ -452,15 +459,18 @@ fun CheckMasterKeyScreen(
                                 Log.e("MasterKeyValidation", "Validation error", result.exception)
                             }
                         }
+                        isChecking = false
                     }
                 }
             } catch (e: Exception) {
+                isChecking = false
                 Log.e("MasterKeyValidation", "Unexpected error during validation", e)
                 errorMessage = "Unexpected error validating master key"
             } finally {
                 isChecking = false
                 masterKeyToCheck = null
             }
+
         }
     }
 
@@ -530,6 +540,7 @@ fun CheckMasterKeyScreen(
                         focusManager.clearFocus()
                         isChecking = true
                         errorMessage = null
+                        handlePasswordCheck()
                     },
                     enabled = masterKey.isNotBlank() && !isChecking,
                     modifier = Modifier.fillMaxWidth()

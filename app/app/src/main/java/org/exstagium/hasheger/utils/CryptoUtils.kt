@@ -45,14 +45,26 @@ object PasswordVault {
         ignoreUnknownKeys = true
     }
 
+    fun saveSalt(context: Context, salt: ByteArray) {
+        try {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            prefs.edit {
+                putString(SALT_KEY, Base64.encodeToString(salt, Base64.NO_WRAP))
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to save salt", e)
+        }
+    }
+
     // ---------------- KEY DERIVATION ----------------
     fun deriveKeyFromPassword(
         password: String,
-        context: Context
+        context: Context,
+        theSalt: ByteArray? = null
     ): VaultResult<SecretKeySpec> {
         return try {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            val salt: ByteArray = prefs.getString(SALT_KEY, null)?.let {
+            val salt: ByteArray = theSalt ?: prefs.getString(SALT_KEY, null)?.let {
                 try {
                     Base64.decode(it, Base64.NO_WRAP)
                 } catch (e: IllegalArgumentException) {
@@ -79,10 +91,11 @@ object PasswordVault {
         }
     }
 
+
     // ---------------- VAULT SETUP ----------------
-    fun createVaultCheck(userMasterPassword: String, context: Context): VaultResult<Unit> {
+    fun createVaultCheck(userMasterPassword: String, context: Context, theSalt: ByteArray? =null): VaultResult<Unit> {
         return try {
-            when (val keyResult = deriveKeyFromPassword(userMasterPassword, context)) {
+            when (val keyResult = deriveKeyFromPassword(userMasterPassword, context, theSalt)) {
                 is VaultResult.Success -> {
                     when (val encryptResult =
                         encrypt("$CHECK_KEY-${System.currentTimeMillis()}", keyResult.data)) {
@@ -287,6 +300,51 @@ object PasswordVault {
         saveVaultItems(userKey, currentList)
     }
 
+
+    fun loadVaultItems2(userKey: SecretKeySpec?, context: Context): VaultResult<List<VaultItem>> {
+        return try {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            val encryptedData = prefs.getString(VAULT_DATA_KEY, null)
+
+            if (userKey == null) {
+                return VaultResult.Error("User key is null")
+            }
+
+            if (encryptedData.isNullOrEmpty()) {
+                // Vault is empty → initialize and save
+                when (val saveResult = saveVaultItems(userKey, emptyList())) {
+                    is VaultResult.Success -> {
+                        prefs.edit { putString(VAULT_DATA_KEY, saveResult.data) }
+                        println("empty vault created")
+                        return VaultResult.Success(data)
+                    }
+                    is VaultResult.Error -> return saveResult
+                }
+            }
+
+            // Try to decrypt vault
+            when (val decryptResult = decrypt(encryptedData!!, userKey)) {
+                is VaultResult.Success -> {
+                    try {
+                        val items: List<VaultItem> = json.decodeFromString(decryptResult.data)
+                        println("vault loaded with ${items.size} items")
+                        data = (items)
+                        return VaultResult.Success(data)
+                    } catch (e: SerializationException) {
+                        Log.e(TAG, "Failed to deserialize vault items", e)
+                        return VaultResult.Success(data)
+                    }
+                }
+                is VaultResult.Error -> decryptResult
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to load vault items", e)
+            VaultResult.Error("Failed to load vault items", e)
+            return VaultResult.Success(data)
+        }
+    }
+
+
     fun loadVaultItems(userKey: SecretKeySpec?, context: Context): VaultResult<List<VaultItem>> {
         return try {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -343,7 +401,19 @@ object PasswordVault {
         }
     }
 
-    fun getVaultItem(userKey: SecretKeySpec, context: Context, id: String): VaultResult<VaultItem> {
+    fun getVaultItemSingle(userKey: SecretKeySpec?, context: Context, id: String): VaultItem? {
+        if (userKey != null) return data.find { it.id == id }
+        return when (val loadResult = loadVaultItems(userKey, context)) {
+            is VaultResult.Success -> {
+                loadResult.data.find { it.id == id }
+            }
+
+            is VaultResult.Error -> null
+        }
+    }
+    fun getVaultItem(userKey: SecretKeySpec?, context: Context, id: String): VaultResult<VaultItem> {
+        if (userKey != null) return data.find { it.id == id }?.let { VaultResult.Success(it) }
+            ?: VaultResult.Error("Item with ID $id not found")
         return when (val loadResult = loadVaultItems(userKey, context)) {
             is VaultResult.Success -> {
                 val item = loadResult.data.find { it.id == id }

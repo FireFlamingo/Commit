@@ -43,6 +43,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import org.exstagium.hasheger.navigation.Screen
 import org.exstagium.hasheger.utils.AuthUtil
 import org.exstagium.hasheger.utils.PasswordVault
 
@@ -103,11 +104,12 @@ fun SettingsScreen(navController: NavController) {
             // Security Section
             Text("Security", style = MaterialTheme.typography.titleMedium)
             SettingsCard {
-                SettingsToggle(
+                SettingsItem(
                     icon = Icons.Default.Fingerprint,
                     title = "Biometric Authentication",
-                    checked = biometricEnabled,
-                    onCheckedChange = { biometricEnabled = it }
+                    onClick = {
+                        navController.navigate(Screen.BiometricScreen.route)
+                    }
                 )
                 SettingsToggle(
                     icon = Icons.Default.Lock,
